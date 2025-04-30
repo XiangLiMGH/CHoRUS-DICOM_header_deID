@@ -1,0 +1,48 @@
+<Configuration>
+    <Server
+        maxThreads="20"
+        port="8080"/>
+    <Pipeline
+        name="Pipeline_chorus"
+        root="C:/Users/fangz/Dropbox (Partners HealthCare)/project/CTP/CTPstore">
+        <ArchiveImportService
+            acceptFileObjects="no"
+            acceptXmlObjects="no"
+            acceptZipObjects="no"
+            class="org.rsna.ctp.stdstages.ArchiveImportService"
+            expandTARs="no"
+            minAge="5000"
+            name="ArchiveImportService"
+            quarantine="quarantines/ArchiveImportService"
+            root="roots/ArchiveImportService"
+            treeRoot="C:/Users/fangz/Partners HealthCare Dropbox/Fang Zeng/project/CTP/pydicom/output/dicom_anonymized"/>
+        <DicomFilter
+            class="org.rsna.ctp.stdstages.DicomFilter"
+            name="DicomFilter"
+            quarantine="quarantines/DicomFilter"
+            root="roots/DicomFilter"
+            script="scripts/DicomFilter.script"/>
+        <IDMap
+            class="org.rsna.ctp.stdstages.IDMap"
+            name="IDMap"
+            root="roots/IDMap"/>
+        <DicomAnonymizer
+            class="org.rsna.ctp.stdstages.DicomAnonymizer"
+            lookupTable="scripts/LookupTable.properties"
+            name="DicomAnonymizer"
+            quarantine="quarantines/DicomAnonymizer"
+            root="roots/DicomAnonymizer"
+            script="scripts/DicomAnonymizer_chorus.script"/>
+        <DirectoryStorageService
+            acceptDuplicates="yes"
+            class="org.rsna.ctp.stdstages.DirectoryStorageService"
+            defaultString=""
+            logDuplicates="no"
+            name="DirectoryStorageService"
+            quarantine="quarantines/DirectoryStorageService"
+            root="roots/DirectoryStorageService"
+            setStandardExtensions="yes"
+            structure="(0010,0020)/(0008,0050)/(0008,0060)/(0008,103E)"
+            whitespaceReplacement="_"/>
+    </Pipeline>
+</Configuration>
