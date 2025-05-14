@@ -4,7 +4,7 @@
         port="8080"/>
     <Pipeline
         name="Pipeline_chorus"
-        root="C:/Users/fangz/Dropbox (Partners HealthCare)/project/CTP/CTPstore">
+        root="C:/Users/fangz/Dropbox (Partners HealthCare)/project/CTP/CHORUS_metadata_deid_instruction/test_sample/output/CTPstore">
         <ArchiveImportService
             acceptFileObjects="no"
             acceptXmlObjects="no"
@@ -15,7 +15,7 @@
             name="ArchiveImportService"
             quarantine="quarantines/ArchiveImportService"
             root="roots/ArchiveImportService"
-            treeRoot="C:/Users/fangz/Partners HealthCare Dropbox/Fang Zeng/project/CTP/pydicom/output/dicom_anonymized"/>
+            treeRoot="C:/Users/fangz/Dropbox (Partners HealthCare)/project/CTP/CHORUS_metadata_deid_instruction/test_sample/output/pydicom/dicom_processed"/>
         <DicomFilter
             class="org.rsna.ctp.stdstages.DicomFilter"
             name="DicomFilter"
@@ -42,7 +42,7 @@
             quarantine="quarantines/DirectoryStorageService"
             root="roots/DirectoryStorageService"
             setStandardExtensions="yes"
-            structure="(0010,0020)/(0008,0050)/(0008,0060)/(0008,103E)"
+            structure="(0008,0060)/(0010,0020)/(0008,0050)/(0008,103E)"
             whitespaceReplacement="_"/>
     </Pipeline>
 </Configuration>

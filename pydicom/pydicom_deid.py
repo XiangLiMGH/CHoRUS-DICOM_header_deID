@@ -5,7 +5,7 @@ import shutil
 import pydicom
 from datetime import datetime, timedelta
 from pydicom.valuerep import DA, DT
-from pydicom.datadict import keyword_for_tag
+# from pydicom.datadict import keyword_for_tag
 
 
 
@@ -33,15 +33,14 @@ def load_lookup_tables(image_map_path, personal_map_path):
     return image_map, personal_map
 
 
-# Shift date string by a number of days
 def shift_da(da_value, days):
     return DA((datetime.strptime(str(da_value), "%Y%m%d") + timedelta(days=days)).date())
 
-# if the dt_value is smaller than 14 characters, it will fail
-def shift_dt(dt_value, days):
-    base = datetime.strptime(str(dt_value)[:14], "%Y%m%d%H%M%S")
-    shifted = base + timedelta(days=days)
-    return DT(shifted.strftime("%Y%m%d%H%M%S") + str(dt_value)[14:])  # Preserve fractional seconds
+
+def shift_dt(dt_value, days): 
+    dt_str = str(dt_value)
+    shifted_date = (datetime.strptime(dt_str[:8], "%Y%m%d") + timedelta(days=days)).strftime("%Y%m%d")
+    return DT(shifted_date + dt_str[8:])
 
 
 # Main processor function
@@ -61,7 +60,7 @@ def process_dicom_file(dcm_path, output_root, unprocessed_root, image_map, perso
 
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         shutil.copy2(dcm_path, target_path)
-        print(f"{dcm_path}: Unmatched PatientID or AccessionNumber. Copied to unprocessed: {target_path}")
+        print(f"Unmatched PatientID or AccessionNumber: {dcm_path}")
         return False  # unprocessed
 
     # De-identify
@@ -95,7 +94,7 @@ def process_dicom_file(dcm_path, output_root, unprocessed_root, image_map, perso
                     target_path = os.path.join(unprocessed_root, relative_path)
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy2(dcm_path, target_path)
-                    print(f"{dcm_path}: Unhandled VR {vr} for tag {tag}. Copied to unprocessed: {target_path}")
+                    print(f"Unhandled VR {vr} for tag {tag}: {dcm_path}")
                     return False
 
     relative_path = os.path.relpath(dcm_path, start=input_dicom_root_dir)
@@ -111,23 +110,23 @@ def find_dicom_files(root_dir):
                 yield os.path.join(root, fname)
 
 
-# Main block
+
 if __name__ == "__main__":
     
-    parser = argparse.ArgumentParser(description="Anonymize DICOM files using lookup tables.")
+    parser = argparse.ArgumentParser(description="De-identify DICOM metadata (PatientID, AccessionNumber and selected date tags) using lookup tables.")
     parser.add_argument("--map_table_dir", default="./lookup_table", help="Directory containing lookup tables")
-    parser.add_argument("--input_root_dir", default="../chorus_sample_images", help="Root directory of input DICOM files")
-    parser.add_argument("--output_root_dir", default="./output", help="Root directory for output files")
+    parser.add_argument("--input_root_dir", default="../test_sample/dicom_original", help="Root directory of input DICOM files")
+    parser.add_argument("--output_root_dir", default="../test_sample/output/pydicom", help="Root directory for output files")
     args = parser.parse_args()
 
     map_table_dir = args.map_table_dir
     input_root_dir = args.input_root_dir
     output_root_dir = args.output_root_dir
     
-    anonymized_dicom_root_dir = os.path.join(output_root_dir, "dicom_anonymized")
+    processed_dicom_root_dir = os.path.join(output_root_dir, "dicom_processed")
     unprocessed_dicom_root_dir = os.path.join(output_root_dir, "dicom_unprocessed")
  
-    os.makedirs(anonymized_dicom_root_dir, exist_ok=True)
+    os.makedirs(processed_dicom_root_dir, exist_ok=True)
     os.makedirs(unprocessed_dicom_root_dir, exist_ok=True)
     
     image_map_path = f"{map_table_dir}/Image_map.csv"
@@ -140,28 +139,28 @@ if __name__ == "__main__":
         subfolder_path = os.path.join(input_root_dir, subfolder)
         print(f"[{idx}] Processing subfolder: {subfolder}")
         
-        anonymized_count = 0
-        unprocessed_count = 0
         processed_count = 0
+        unprocessed_count = 0
+        Total_count = 0
 
         for dcm_path in find_dicom_files(subfolder_path):
-            processed_count += 1
+            Total_count += 1
             success = process_dicom_file(
                 dcm_path,
-                anonymized_dicom_root_dir,
+                processed_dicom_root_dir,
                 unprocessed_dicom_root_dir,
                 image_map,
                 personal_map,
                 input_root_dir
             )
             if success:
-                anonymized_count += 1
+                processed_count += 1
             else:
                 unprocessed_count += 1
 
-        print(f"Anonymized: {anonymized_count} | Unprocessed: {unprocessed_count} | Total: {processed_count}\n")
+        print(f"Processed: {processed_count} | Unprocessed: {unprocessed_count} | Total: {Total_count}\n")
+        
+    print("De-identification of PatientID, AccessionNumber, and selected date tags has been completed.\n")
+    
+# python pydicom_deid.py --map_table_dir ./lookup_table --input_root_dir ../test_sample/dicom_original --output_root_dir ../test_sample/output/pydicom 2>&1 | tee logs.txt
 
-
-
-## python pydicom_deid.py --map_table_dir ./lookup_table --input_dir ./dicoms --output_dir ./output 2>&1 | tee logs.txt
-## ## python pydicom_deid.py 2>&1 | tee logs.txt
